@@ -1,0 +1,2 @@
+# ffxi
+ FFXI Addons / Scripts
