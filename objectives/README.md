@@ -18,4 +18,4 @@ With write enabled, hex id + description will be written to file when accepting 
 
 Spreadsheet with hexID of currently obtained objectives located here:
 
-https://docs.google.com/spreadsheets/d/1Jf_70I_E5cyVZAG9bi-2by60ImXxdqo1xkqHcydJPCc/edit?usp=sharing
+https://docs.google.com/spreadsheets/d/1OD-BIfd6u35m00Jx-B3jyDwPT_3fp1R0T5_C6xuvMAw/edit?usp=sharing
