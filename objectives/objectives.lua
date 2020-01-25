@@ -85,6 +85,11 @@ local function clean_str(str)
     return str;
 end
 
+---------------------------------------------------------------------------------------------------
+-- func: string.starts
+-- desc: Checks start of a string and returns true if it starts with string passed as start
+---------------------------------------------------------------------------------------------------
+
 function string.starts(String,Start)
    return string.sub(String,1,string.len(Start))==Start
 end
@@ -115,8 +120,6 @@ ashita.register_event('outgoing_packet', function(id, size, data, modified, bloc
 			if (__debug) then
 				print(string.format("Sent quest packet with Objective id of: 0x%X", obj));
 			end
---	ashita.timer.create('castTimer', 7, 1, new_cast)
-	--	print("The Client just sent data:", struct.unpack('I2I2II2I2I2BBI', data))
     end
     return false;
 end);
@@ -157,8 +160,8 @@ ashita.register_event('incoming_text', function(mode, message, modifiedmode, mod
 end);
 
 ---------------------------------------------------------------------------------------------------
--- func: get_quest
--- desc: Event called when the addon is asked to handle an incoming data.
+-- func: get_objective
+-- desc: Gets an ROE objective with specified id
 ---------------------------------------------------------------------------------------------------
 function get_objective(objectiveId)
 	if(__debug) then
@@ -169,8 +172,8 @@ function get_objective(objectiveId)
 end;
 
 ---------------------------------------------------------------------------------------------------
--- func: get_quest
--- desc: Event called when the addon is asked to handle an incoming data.
+-- func: remove_objective
+-- desc: Removes an ROE objective with specified id
 ---------------------------------------------------------------------------------------------------
 function remove_objective(objectiveId)
 	print("Removing RoE Objective " .. objectiveId)
