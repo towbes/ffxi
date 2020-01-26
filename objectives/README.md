@@ -10,11 +10,14 @@ File is stored in Ashita base + /roelogs
 /addon load objectives
 
 /objectives get id  - Gets RoE objective with id format: 0x0ABC
-/objectives remove id' - Removes RoE objective with id format: 0x0ABC
-/objectives debug'  - Toggles Debug flag on or off
-/objectives write'  - Toggles writing RoE Hex + Description to Ashita folder/roelogs
-
+/objectives remove id - Removes RoE objective with id format: 0x0ABC
+/objectives debug  - Toggles Debug flag on or off
+/objectives write  - Toggles writing RoE Hex + Description to Ashita folder/roelogs
 With write enabled, hex id + description will be written to file when accepting a new RoE objective
+
+/objectives load - Loads list of objective profiles from objprofiles.json
+/objectives save - Saves objective profiles to objprofiles.json
+objectives newprofile <profileName> - Adds current RoE Objectives as new profile
 
 Spreadsheet with hexID of currently obtained objectives located here:
 
