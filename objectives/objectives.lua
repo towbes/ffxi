@@ -30,9 +30,14 @@ _addon.version  = '0.0.1';
 require 'common';
 
 
-local __debug = false;
+local __debug = true;
 local __write = false;
 
+_roe = T{
+	active = T{},
+	complete = T{},
+	max_count = 30,
+};
 
 ----------------------------------------------------------------------------------------------------
 -- func: print_help
@@ -101,6 +106,28 @@ end
 ---------------------------------------------------------------------------------------------------
 ashita.register_event('incoming_packet', function(id, size, data, modified, blocked)
     if (id == 0x111) then
+		for k in pairs (_roe.active) do
+			_roe.active[k] = nil;
+		end
+		for i = 1, _roe.max_count do
+			--Every 4 bytes is a new RoE
+			local offset = 4 + ((i - 1) * 4);
+			--Get ROE id and progress
+			local id = ashita.bits.unpack_be(data, offset, 0, 12);
+			local progress = ashita.bits.unpack_be(data, offset, 12, 20);
+			if (__debug and id ~= nil) then
+				print((string.format("roe id: 0x%X , progress: 0x%X", id,progress)));
+				--print((string.format("roe progress: 0x%X ", progress)));
+			end
+			if id > 0 then
+				_roe.active[id] = progress;
+			end
+		end
+		for k,v in pairs (_roe.active) do
+			if (__debug	and _roe.active[k] ~=nil) then
+				print(string.format("roe.active id and progress: 0x%X, 0x%X", k, v));
+			end	
+		end
 		if (__debug) then
 			print(string.format("Incoming packet: 0x%X ", id));
 		end
@@ -167,6 +194,9 @@ function get_objective(objectiveId)
 	if(__debug) then
 		print("Registering ROE objective");
 	end
+	--Send a unity ranking menu packet to look natural like we opened the menu?
+--	local unityranking = struct.pack('I2I2I4', 0x1517, 0x0000, 0x0000):totable();
+--	AddOutgoingPacket(0x10C, unityranking);
 	local getcommand = struct.pack('I2I2I4', 0x050C, 0x0000, objectiveId):totable();
 	AddOutgoingPacket(0x10C, getcommand);
 end;
