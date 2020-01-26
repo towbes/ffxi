@@ -25,12 +25,12 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'objectives';
-_addon.version  = '0.0.1';
+_addon.version  = '0.1.1';
 
 require 'common';
 
 
-local __debug = true;
+local __debug = false;
 local __write = false;
 
 _roe = T{
@@ -38,6 +38,11 @@ _roe = T{
 	complete = T{},
 	max_count = 30,
 };
+
+--------------------------------------------------------------
+-- Create a table for holding the trust lists
+--------------------------------------------------------------
+objectiveProfiles = { };
 
 ----------------------------------------------------------------------------------------------------
 -- func: print_help
@@ -187,6 +192,60 @@ ashita.register_event('incoming_text', function(mode, message, modifiedmode, mod
 end);
 
 ---------------------------------------------------------------------------------------------------
+-- func: load_objectives
+-- desc: load RoE objectives from a file
+---------------------------------------------------------------------------------------------------
+function load_objectives()
+    local tempCommands = ashita.settings.load(_addon.path .. '/settings/objprofiles.json');
+	if tempCommands ~= nil then
+		print('[Objectives][Load] Stored objective profiles found.');
+		objectiveProfiles = tempCommands;		
+	else
+		print('[Objectives][Load] Objective profiles could not be loaded. Creating empty lists.');
+		objectiveProfiles = { };
+	end
+end;
+
+---------------------------------------------------------------------------------------------------
+-- func: save_objectives
+-- desc: saves current RoE objectives to a file
+---------------------------------------------------------------------------------------------------
+function new_profile(profileName)
+	print("Saving current RoE objectives to profile " .. profileName)
+	newProfile = {}
+	for k,v in pairs (_roe.active) do
+		convk = string.format("0x%X",k)
+		convv = string.format("0x%X",v)
+		if (__debug) then
+			print(string.format("objeprofile id and progress: 0x%X, 0x%X", k, v));
+			print(convk)
+			print(convv)
+		end
+		table.insert(newProfile, {convk,convv})
+	end
+	objectiveProfiles[profileName] = newProfile;
+end;
+
+---------------------------------------------------------------------------------------------------
+-- func: save_objectives
+-- desc: saves current RoE objectives to a file
+---------------------------------------------------------------------------------------------------
+function save_objectives()
+	print("Writing saved profiles to file settings/objprofiles.json");
+	-- Save the addon settings to a file (from the addonSettings table)
+	for i = 1, table.getn(objectiveProfiles) do
+		for k,v in pairs (objectiveProfiles.profile[i]) do
+			if (__debug) then
+				print(string.format("objeprofile id and progress: 0x%X, 0x%X", k, v));
+			end
+		end
+	end
+	ashita.settings.save(_addon.path .. '/settings'  
+						 .. '/objprofiles.json' , objectiveProfiles);
+end;
+
+
+---------------------------------------------------------------------------------------------------
 -- func: get_objective
 -- desc: Gets an ROE objective with specified id
 ---------------------------------------------------------------------------------------------------
@@ -256,6 +315,21 @@ ashita.register_event('command', function(command, ntype)
 		end
 		return true;
 	end	
+	
+	if (#args >= 2 and args[2] == 'load') then
+		load_objectives()
+		return true;
+	end		
+	
+	if (#args >= 2 and args[2] == 'save') then
+		save_objectives()
+		return true;
+	end		
+
+	if (#args == 3 and args[2] == 'newprofile') then
+		new_profile(args[3])
+		return true;
+	end		
 
     -- Prints the addon help..
     print_help('/objectives', {
@@ -263,7 +337,10 @@ ashita.register_event('command', function(command, ntype)
 		{ '/objectives remove id', ' - Removes RoE objective with id format: 0x0ABC'},
 		{ '/objectives debug',   '- Toggles Debug flag on or off' },
         { '/objectives write',     '- Toggles writing RoE Hex + Description to Ashita folder/roelogs' },
-		{ 'With write enabled, hex id + description will be written to file when accepting a new RoE objective', ''}
+		{ 'With write enabled, hex id + description will be written to file when accepting a new RoE objective', ''},
+		{ '/objectives load', ' - Loads list of objective profiles from objprofiles.json'},
+		{ '/objectives save', ' - Saves objective profiles to objprofiles.json'},
+		{ '/objectives newprofile <profileName>', ' - Adds current RoE Objectives as new profile'}
     });
     return true;
 
