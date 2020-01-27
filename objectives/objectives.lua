@@ -25,7 +25,7 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'objectives';
-_addon.version  = '0.1.1';
+_addon.version  = '0.2.1';
 
 require 'common';
 
@@ -247,23 +247,55 @@ function list_profiles()
 end;
 
 ---------------------------------------------------------------------------------------------------
+-- func: load_profiles
+-- desc: Load profile name to table in order to add objectives
+---------------------------------------------------------------------------------------------------
+function load_profile(profileName)
+	count = 0
+	for k,v in pairs (objectiveProfiles[profileName]) do
+		table.insert(currentProfile,v)
+	end
+	print("Loaded profile: " .. profileName);
+	printcurrentProfile = ashita.settings.JSON:encode_pretty(currentProfile, nil, {pretty = true, indent = "->    " });
+	print(printcurrentProfile);
+end;
+
+---------------------------------------------------------------------------------------------------
 -- func: save_objectives
 -- desc: saves current RoE objectives to a file
 ---------------------------------------------------------------------------------------------------
 function save_objectives()
 	print("Writing saved profiles to file settings/objprofiles.json");
 	-- Save the addon settings to a file (from the addonSettings table)
-	for i = 1, table.getn(objectiveProfiles) do
-		for k,v in pairs (objectiveProfiles.profile[i]) do
-			if (__debug) then
-				print(string.format("objeprofile id and progress: 0x%X, 0x%X", k, v));
-			end
-		end
-	end
 	ashita.settings.save(_addon.path .. '/settings'  
 						 .. '/objprofiles.json' , objectiveProfiles);
 end;
 
+---------------------------------------------------------------------------------------------------
+-- func: clear_objectives
+-- desc: Clears all current objectives
+---------------------------------------------------------------------------------------------------
+function clear_objectives()
+	print("Clearing all objectives...");
+	i = 1
+	for k,v in pairs (_roe.active) do
+		objclear = string.format("0x%X",k)
+		i = i + 1
+		if string.len(objclear) < 6 then
+			prefix = string.sub(objclear, 1, 2)
+			suffix = string.sub(objclear, 3)
+			if string.len(suffix) < 2 then
+				padding = '000'
+			elseif string.len(suffix) < 3 then
+				padding = '00'
+			elseif string.len(suffix) < 4 then
+				padding = '0'
+			end
+			fixedobj = prefix .. padding .. suffix
+		end
+		ashita.timer.once(i, remove_objective, fixedobj);
+	end
+end;
 
 ---------------------------------------------------------------------------------------------------
 -- func: get_objective
@@ -351,8 +383,18 @@ ashita.register_event('command', function(command, ntype)
 		return true;
 	end		
 
+	if (#args >= 2 and args[2] == 'clear') then
+		clear_objectives()
+		return true;
+	end	
+
 	if (#args == 3 and args[2] == 'newprofile') then
 		new_profile(args[3])
+		return true;
+	end		
+
+	if (#args == 3 and args[2] == 'loadprofile') then
+		load_profile(args[3])
 		return true;
 	end		
 
@@ -366,7 +408,9 @@ ashita.register_event('command', function(command, ntype)
 		{ '/objectives load', ' - Loads list of objective profiles from objprofiles.json'},
 		{ '/objectives save', ' - Saves objective profiles to objprofiles.json'},
 		{ '/objectives newprofile <profileName>', ' - Adds current RoE Objectives as new profile'},
-		{ '/objectives list', ' - Lists available profiles'}
+		{ '/objectives list', ' - Lists available profiles'},
+		{'/objectives loadprofile <profileName>', ' - Loads objectives from profile to add or remove objectives'},
+		{'/objectives clear', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'}
     });
     return true;
 

@@ -17,7 +17,11 @@ With write enabled, hex id + description will be written to file when accepting 
 
 /objectives load - Loads list of objective profiles from objprofiles.json
 /objectives save - Saves objective profiles to objprofiles.json
-objectives newprofile <profileName> - Adds current RoE Objectives as new profile
+/objectives list - Lists profiles in objprofiles.json
+/objectives newprofile <profileName> - Adds current RoE Objectives as new profile
+/objectives loadprofile <profileName>- Loads objectives from profile to add or remove objectives
+/objectives clear - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list
+
 
 Spreadsheet with hexID of currently obtained objectives located here:
 
