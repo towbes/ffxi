@@ -40,9 +40,19 @@ _roe = T{
 };
 
 --------------------------------------------------------------
--- Create a table for holding the trust lists
+-- Create a table for holding profiles
 --------------------------------------------------------------
 objectiveProfiles = { };
+
+--------------------------------------------------------------
+-- Create a table for holding the current profile to be written
+--------------------------------------------------------------
+currentProfile = { };
+
+--try to load objectives file when addon is loaded
+ashita.register_event('load', function()
+    load_objectives();
+end);
 
 ----------------------------------------------------------------------------------------------------
 -- func: print_help
@@ -207,8 +217,8 @@ function load_objectives()
 end;
 
 ---------------------------------------------------------------------------------------------------
--- func: save_objectives
--- desc: saves current RoE objectives to a file
+-- func: new_profile
+-- desc: Creates new profile with current objectives
 ---------------------------------------------------------------------------------------------------
 function new_profile(profileName)
 	print("Saving current RoE objectives to profile " .. profileName)
@@ -224,6 +234,16 @@ function new_profile(profileName)
 		table.insert(newProfile, {convk,convv})
 	end
 	objectiveProfiles[profileName] = newProfile;
+end;
+
+---------------------------------------------------------------------------------------------------
+-- func: list_profiles
+-- desc: Lists saved profiles
+---------------------------------------------------------------------------------------------------
+function list_profiles()
+	print("Current Profiles:\n")
+	printObjectives = ashita.settings.JSON:encode_pretty(objectiveProfiles, nil, {pretty = true, indent = "->    " });
+	print(printObjectives);
 end;
 
 ---------------------------------------------------------------------------------------------------
@@ -326,6 +346,11 @@ ashita.register_event('command', function(command, ntype)
 		return true;
 	end		
 
+	if (#args >= 2 and args[2] == 'list') then
+		list_profiles()
+		return true;
+	end		
+
 	if (#args == 3 and args[2] == 'newprofile') then
 		new_profile(args[3])
 		return true;
@@ -340,7 +365,8 @@ ashita.register_event('command', function(command, ntype)
 		{ 'With write enabled, hex id + description will be written to file when accepting a new RoE objective', ''},
 		{ '/objectives load', ' - Loads list of objective profiles from objprofiles.json'},
 		{ '/objectives save', ' - Saves objective profiles to objprofiles.json'},
-		{ '/objectives newprofile <profileName>', ' - Adds current RoE Objectives as new profile'}
+		{ '/objectives newprofile <profileName>', ' - Adds current RoE Objectives as new profile'},
+		{ '/objectives list', ' - Lists available profiles'}
     });
     return true;
 
