@@ -29,15 +29,15 @@
 -- _addon.version = '2018.6.25.1'
 
 --To get this data, turn on Developer Mode in Discord and right click these targets. Select "Copy ID" and paste here (between ' and ')
-admin = {'262793764689412096', '213886330638172160'}
-shout = {'532042219041849355'}
-linkshell = {'532042237274488843'}
-tell = {'532042183000195082'}
+admin = {'', ''}
+shout = {''}
+linkshell = {''}
+tell = {''}
 --Get this from the Discord developer page. (https://discordapp.com/developers/applications/me)
-token = 'NTA5NDAwMDYzMTk0MTY5MzQ1.DsNPcg.KO5RaQXC3NjzkOrPYhVuKIH0KKE'
+token = ''
 --Enter the path to your Cardian folder in Windower. Replace any "\" with "/". Do not include file.
 --Ex: D:/Windower4/addons/cardian/
-addon_path = 'C:/Users/ritzffxi/Desktop/ashita3/addons/cardian/'
+addon_path = 'ashita3/addons/cardian/'
 --Spam filter tolerance. This number indicates how many messages to keep in the log for comparison
 spam = 5
 --Default settings for displaying linkshell messages, tells, and shouts
