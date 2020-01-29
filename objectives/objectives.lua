@@ -25,7 +25,7 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'objectives';
-_addon.version  = '0.2.1';
+_addon.version  = '0.2.2';
 
 require 'common';
 
@@ -232,7 +232,7 @@ function new_profile(profileName)
 			print(convk)
 			print(convv)
 		end
-		table.insert(newProfile, {convk,convv})
+		table.insert(newProfile, convk)
 	end
 	objectiveProfiles[profileName] = newProfile;
 end;
@@ -309,7 +309,6 @@ function clear_allobjectives()
 	print("Clearing all objectives without progress...");
 	i = 1
 	for k,v in pairs (_roe.active) do
-
 		objclear = string.format("0x%X",k)
 		i = i + 1
 		if string.len(objclear) < 6 then
