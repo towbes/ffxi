@@ -30,7 +30,7 @@ _addon.version  = '0.3.1';
 
 
 --Used for copycat mode to get/remove RoE from dual box characters with /ms send
-partylist = {'Maikosae'}
+partylist = {'', '', '', ''}
 
 
 ---------------------------------
@@ -232,7 +232,6 @@ function send_objectives(objId)
 		print(questcommand)		
 	end
 	for i, character in ipairs(partylist) do
-		print(character)
 		AshitaCore:GetChatManager():QueueCommand("/ms sendto ".. character .." " .. questcommand, 1);	
 	end
 end;
@@ -248,7 +247,6 @@ function send_removeobjectives(objId)
 		print(questcommand)		
 	end
 	for i, character in ipairs(partylist) do
-		print(character)
 		AshitaCore:GetChatManager():QueueCommand("/ms sendto ".. character .." " .. questcommand, 1);	
 	end
 end;
