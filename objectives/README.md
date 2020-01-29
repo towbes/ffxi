@@ -21,8 +21,8 @@ With write enabled, hex id + description will be written to file when accepting 
 /objectives newprofile <profileName> - Adds current RoE Objectives as new profile  
 /objectives loadprofile <profileName>- Loads objectives from profile to add or remove objectives  
 /objectives clear - Clears zero progress currently loaded objectives (must zone or add/remove an objective to initilize list  
-/objectives clearall - Clears ALL currently loaded objectives regard (must zone or add/remove an objective to initilize list'},
-/objectives copycat - Enables Copycat mode. Manually getting / removing ROE on main character will use /ms sendTo to update other characters - Edit partylist at top of addon file
+/objectives clearall - Clears ALL currently loaded objectives regard (must zone or add/remove an objective to initilize list  
+/objectives copycat - Enables Copycat mode. Manually getting / removing ROE on main character will use /ms sendTo to update other characters - Edit partylist at top of addon file  
 
 
 Spreadsheet with hexID of currently obtained objectives located here:
