@@ -1,6 +1,7 @@
 # Objectives
 
 ## WARNING: This addon may cause suspension / ban  
+The risk level is probably pretty low. There is a similar windower addon that has been out for a copule of years and there have not been reports of suspension or bans. However, this addon injects packets and could be detected if SE wanted to.
 
 Objectives adds / removes RoE Objectives based on hex id  
 
