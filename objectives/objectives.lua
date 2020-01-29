@@ -172,6 +172,7 @@ end);
 ---------------------------------------------------------------------------------------------------
 ashita.register_event('incoming_text', function(mode, message, modifiedmode, modifiedmessage, blocked)
 
+
 	if(__write) then
 		--Logs name of Regime with current packet object value
 		-- Create the file name and ensure the path to it exists..
@@ -276,9 +277,39 @@ end;
 -- desc: Clears all current objectives
 ---------------------------------------------------------------------------------------------------
 function clear_objectives()
-	print("Clearing all objectives...");
+	print("Clearing all objectives without progress...");
 	i = 1
 	for k,v in pairs (_roe.active) do
+		if (v == 0) then
+			objclear = string.format("0x%X",k)
+			i = i + 1
+			if string.len(objclear) < 6 then
+				prefix = string.sub(objclear, 1, 2)
+				suffix = string.sub(objclear, 3)
+				if string.len(suffix) < 2 then
+					padding = '000'
+				elseif string.len(suffix) < 3 then
+					padding = '00'
+				elseif string.len(suffix) < 4 then
+					padding = '0'
+				end
+				fixedobj = prefix .. padding .. suffix
+			end
+			ashita.timer.once(i, remove_objective, fixedobj);
+		end
+
+	end
+end;
+
+---------------------------------------------------------------------------------------------------
+-- func: clear_objectives
+-- desc: Clears all current objectives
+---------------------------------------------------------------------------------------------------
+function clear_allobjectives()
+	print("Clearing all objectives without progress...");
+	i = 1
+	for k,v in pairs (_roe.active) do
+
 		objclear = string.format("0x%X",k)
 		i = i + 1
 		if string.len(objclear) < 6 then
@@ -294,6 +325,8 @@ function clear_objectives()
 			fixedobj = prefix .. padding .. suffix
 		end
 		ashita.timer.once(i, remove_objective, fixedobj);
+
+
 	end
 end;
 
@@ -387,6 +420,11 @@ ashita.register_event('command', function(command, ntype)
 		clear_objectives()
 		return true;
 	end	
+	
+	if (#args >= 2 and args[2] == 'clearall') then
+		clear_allobjectives()
+		return true;
+	end	
 
 	if (#args == 3 and args[2] == 'newprofile') then
 		new_profile(args[3])
@@ -410,7 +448,8 @@ ashita.register_event('command', function(command, ntype)
 		{ '/objectives newprofile <profileName>', ' - Adds current RoE Objectives as new profile'},
 		{ '/objectives list', ' - Lists available profiles'},
 		{'/objectives loadprofile <profileName>', ' - Loads objectives from profile to add or remove objectives'},
-		{'/objectives clear', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'}
+		{'/objectives clear', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'},
+		{'/objectives clearall', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'}
     });
     return true;
 
