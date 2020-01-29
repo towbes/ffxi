@@ -30,7 +30,7 @@ _addon.version  = '0.3.1';
 
 
 --Used for copycat mode to get/remove RoE from dual box characters with /ms send
-partylist = {''}
+partylist = {'Maikosae'}
 
 
 ---------------------------------
@@ -304,12 +304,41 @@ end;
 ---------------------------------------------------------------------------------------------------
 function load_profile(profileName)
 	count = 0
-	for k,v in pairs (objectiveProfiles[profileName]) do
-		table.insert(currentProfile,v)
+	if objectiveProfiles[profileName] == nil then
+		print("That profile does not exist")
+		currentProfile = {}
+	else
+		print("Loaded profile: " .. profileName);
+		for k,v in pairs (objectiveProfiles[profileName]) do
+			table.insert(currentProfile,v)
+		end
 	end
-	print("Loaded profile: " .. profileName);
-	printcurrentProfile = ashita.settings.JSON:encode_pretty(currentProfile, nil, {pretty = true, indent = "->    " });
-	print(printcurrentProfile);
+end;
+
+---------------------------------------------------------------------------------------------------
+-- func: get_current
+-- desc: Gets the currently loaded profile objectives
+---------------------------------------------------------------------------------------------------
+function get_current()
+	i = 0;
+	for i, objective in ipairs (currentProfile) do
+		i = i + 1;
+		objget = string.format("0x%X",objective);
+		ashita.timer.once(i, get_objective, objget);
+	end
+end;
+
+---------------------------------------------------------------------------------------------------
+-- func: remove_current
+-- desc: Removes the currently loaded profile objectives
+---------------------------------------------------------------------------------------------------
+function remove_current()
+	i = 0;
+	for i, objective in ipairs (currentProfile) do
+		i = i + 1;
+		objrem = string.format("0x%X",objective);
+		ashita.timer.once(i, remove_objective, objremove);
+	end
 end;
 
 ---------------------------------------------------------------------------------------------------
@@ -336,7 +365,6 @@ function clear_objectives()
 			i = i + 1
 			ashita.timer.once(i, remove_objective, objclear);
 		end
-
 	end
 end;
 
@@ -350,21 +378,7 @@ function clear_allobjectives()
 	for k,v in pairs (_roe.active) do
 		objclear = string.format("0x%X",k)
 		i = i + 1
-		if string.len(objclear) < 6 then
-			prefix = string.sub(objclear, 1, 2)
-			suffix = string.sub(objclear, 3)
-			if string.len(suffix) < 2 then
-				padding = '000'
-			elseif string.len(suffix) < 3 then
-				padding = '00'
-			elseif string.len(suffix) < 4 then
-				padding = '0'
-			end
-			fixedobj = prefix .. padding .. suffix
-		end
-		ashita.timer.once(i, remove_objective, fixedobj);
-
-
+		ashita.timer.once(i, remove_objective, objclear);
 	end
 end;
 
@@ -505,24 +519,32 @@ ashita.register_event('command', function(command, ntype)
 		new_profile(args[3])
 		return true;
 	end		
-
-	if (#args == 3 and args[2] == 'loadprofile') then
+	
+	if (#args == 3 and args[2] == 'getwithprofile') then
 		load_profile(args[3])
+		get_current()
+		return true;
+	end		
+	
+	if (#args == 3 and args[2] == 'removewithprofile') then
+		load_profile(args[3])
+		remove_current()
 		return true;
 	end		
 
     -- Prints the addon help..
     print_help('/objectives', {
-		{ '/objectives get id', ' - Gets RoE objective with id format: 0x0ABC'},
-		{ '/objectives remove id', ' - Removes RoE objective with id format: 0x0ABC'},
-		{ '/objectives debug',   '- Toggles Debug flag on or off' },
-        { '/objectives write',     '- Toggles writing RoE Hex + Description to Ashita folder/roelogs' },
-		{ 'With write enabled, hex id + description will be written to file when accepting a new RoE objective', ''},
-		{ '/objectives load', ' - Loads list of objective profiles from objprofiles.json'},
-		{ '/objectives save', ' - Saves objective profiles to objprofiles.json'},
-		{ '/objectives newprofile <profileName>', ' - Adds current RoE Objectives as new profile'},
-		{ '/objectives list', ' - Lists available profiles'},
-		{'/objectives loadprofile <profileName>', ' - Loads objectives from profile to add or remove objectives'},
+		{'/objectives get id', ' - Gets RoE objective with id format: 0x0ABC'},
+		{'/objectives remove id', ' - Removes RoE objective with id format: 0x0ABC'},
+		{'/objectives debug',   '- Toggles Debug flag on or off' },
+        {'/objectives write',     '- Toggles writing RoE Hex + Description to Ashita folder/roelogs' },
+		{'With write enabled, hex id + description will be written to file when accepting a new RoE objective', ''},
+		{'/objectives load', ' - Loads list of objective profiles from objprofiles.json'},
+		{'/objectives save', ' - Saves objective profiles to objprofiles.json'},
+		{'/objectives list', ' - Lists available profiles'},
+		{'/objectives newprofile <profileName>', ' - Adds current RoE Objectives as new profile'},
+		{'/objectives getwithprofile <profileName>', ' - Gets RoEs in the specified profile'},
+		{'/objectives removewithprofile <profileName>', ' - Removes RoEs in the specified profile'},
 		{'/objectives clear', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'},
 		{'/objectives clearall', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'},
 		{'/objectives copycat', ' - Enables Copycat mode. Manually getting / removing ROE on main character will use /ms sendTo to update other characters - Edit partylist at top of addon file'}
