@@ -25,19 +25,31 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'objectives';
-_addon.version  = '0.2.2';
+_addon.version  = '0.3.1';
+
+
+
+--Used for copycat mode to get/remove RoE from dual box characters with /ms send
+partylist = {''}
+
+
+---------------------------------
+--DO NOT EDIT BELOW THIS LINE
+---------------------------------
 
 require 'common';
 
-
 local __debug = false;
 local __write = false;
+local __copycat = false;
 
 _roe = T{
 	active = T{},
 	complete = T{},
 	max_count = 30,
 };
+
+
 
 --------------------------------------------------------------
 -- Create a table for holding profiles
@@ -147,12 +159,7 @@ ashita.register_event('incoming_packet', function(id, size, data, modified, bloc
 			print(string.format("Incoming packet: 0x%X ", id));
 		end
 	end
-    if (id == 0x029) then
-		if (__debug) then
-			msg = struct.unpack('I4', data, 0x18 + 1);
-			print(string.format("Sent quest packet with Objective id of: 0x%X", obj));
-		end
-	end
+
 	return false;
 end);
 
@@ -162,6 +169,18 @@ ashita.register_event('outgoing_packet', function(id, size, data, modified, bloc
 			if (__debug) then
 				print(string.format("Sent quest packet with Objective id of: 0x%X", obj));
 			end
+		if (copycat == true) then
+			send_objectives(obj)
+		end
+    end
+    if (id == 0x10D) then
+		obj = struct.unpack('I4', data, 0x04 + 1);
+			if (__debug) then
+				print(string.format("Sent quest packet with Objective id of: 0x%X", obj));
+			end
+		if (copycat == true) then
+			send_removeobjectives(obj)
+		end
     end
     return false;
 end);
@@ -201,6 +220,38 @@ ashita.register_event('incoming_text', function(mode, message, modifiedmode, mod
     
     return false;
 end);
+
+---------------------------------------------------------------------------------------------------
+-- func: send_objective
+-- desc: Send objective with /ms sendto characters in partylist
+---------------------------------------------------------------------------------------------------
+function send_objectives(objId)
+	questcommand = string.format("/objectives get 0x%X", objId);
+	if(__debug) then
+		print(string.format("Sending objective 0x%X with /ms send", objId));
+		print(questcommand)		
+	end
+	for i, character in ipairs(partylist) do
+		print(character)
+		AshitaCore:GetChatManager():QueueCommand("/ms sendto ".. character .." " .. questcommand, 1);	
+	end
+end;
+
+---------------------------------------------------------------------------------------------------
+-- func: send_removeobjective
+-- desc: Send objective with /ms sendto characters in partylist
+---------------------------------------------------------------------------------------------------
+function send_removeobjectives(objId)
+	questcommand = string.format("/objectives remove 0x%X", objId);
+	if(__debug) then
+		print(string.format("Sending objective 0x%X with /ms send", objId));
+		print(questcommand)		
+	end
+	for i, character in ipairs(partylist) do
+		print(character)
+		AshitaCore:GetChatManager():QueueCommand("/ms sendto ".. character .." " .. questcommand, 1);	
+	end
+end;
 
 ---------------------------------------------------------------------------------------------------
 -- func: load_objectives
@@ -283,19 +334,7 @@ function clear_objectives()
 		if (v == 0) then
 			objclear = string.format("0x%X",k)
 			i = i + 1
-			if string.len(objclear) < 6 then
-				prefix = string.sub(objclear, 1, 2)
-				suffix = string.sub(objclear, 3)
-				if string.len(suffix) < 2 then
-					padding = '000'
-				elseif string.len(suffix) < 3 then
-					padding = '00'
-				elseif string.len(suffix) < 4 then
-					padding = '0'
-				end
-				fixedobj = prefix .. padding .. suffix
-			end
-			ashita.timer.once(i, remove_objective, fixedobj);
+			ashita.timer.once(i, remove_objective, objclear);
 		end
 
 	end
@@ -337,10 +376,23 @@ function get_objective(objectiveId)
 	if(__debug) then
 		print("Registering ROE objective");
 	end
+	fixedobj = objectiveId;
+	if string.len(objectiveId) < 6 then
+		prefix = string.sub(objectiveId, 1, 2)
+		suffix = string.sub(objectiveId, 3)
+		if string.len(suffix) < 2 then
+			padding = '000';
+		elseif string.len(suffix) < 3 then
+			padding = '00';
+		elseif string.len(suffix) < 4 then
+			padding = '0';
+		end
+		fixedobj = prefix .. padding .. suffix
+	end
 	--Send a unity ranking menu packet to look natural like we opened the menu?
 --	local unityranking = struct.pack('I2I2I4', 0x1517, 0x0000, 0x0000):totable();
 --	AddOutgoingPacket(0x10C, unityranking);
-	local getcommand = struct.pack('I2I2I4', 0x050C, 0x0000, objectiveId):totable();
+	local getcommand = struct.pack('I2I2I4', 0x050C, 0x0000, fixedobj):totable();
 	AddOutgoingPacket(0x10C, getcommand);
 end;
 
@@ -349,8 +401,21 @@ end;
 -- desc: Removes an ROE objective with specified id
 ---------------------------------------------------------------------------------------------------
 function remove_objective(objectiveId)
+	fixedobj = objectiveId;
+	if string.len(objectiveId) < 6 then
+		prefix = string.sub(objectiveId, 1, 2)
+		suffix = string.sub(objectiveId, 3)
+		if string.len(suffix) < 2 then
+			padding = '000';
+		elseif string.len(suffix) < 3 then
+			padding = '00';
+		elseif string.len(suffix) < 4 then
+			padding = '0';
+		end
+		fixedobj = prefix .. padding .. suffix;
+	end
 	print("Removing RoE Objective " .. objectiveId)
-	local getcommand = struct.pack('I2I2I4', 0x050D, 0x0000, objectiveId):totable();
+	local getcommand = struct.pack('I2I2I4', 0x050D, 0x0000, fixedobj):totable();
 	AddOutgoingPacket(0x10D, getcommand);
 end;
 
@@ -367,13 +432,13 @@ ashita.register_event('command', function(command, ntype)
     end
 
     -- Get an RoE Objective
-    if (#args == 3 and args[2] == 'get' and string.starts(args[3], "0x") and string.len(args[3]) == 6) then
+    if (#args == 3 and args[2] == 'get' and string.starts(args[3], "0x") and string.len(args[3]) <= 6) then
 		get_objective(args[3]);
         return true;
     end
 	
     -- Remove an RoE objective
-    if (#args == 3 and args[2] == 'remove' and string.starts(args[3], "0x") and string.len(args[3]) == 6) then
+    if (#args == 3 and args[2] == 'remove' and string.starts(args[3], "0x") and string.len(args[3]) <= 6) then
 		remove_objective(args[3]);
         return true;
     end
@@ -414,6 +479,17 @@ ashita.register_event('command', function(command, ntype)
 		list_profiles()
 		return true;
 	end		
+	
+	if (#args >= 2 and args[2] == 'copycat') then
+		if copycat == true then
+			copycat = false;
+			print("Copycat mode disabled");
+		else
+			copycat = true;
+			print("Copycat mode enabled");
+		end
+		return true;
+	end	
 
 	if (#args >= 2 and args[2] == 'clear') then
 		clear_objectives()
@@ -448,7 +524,8 @@ ashita.register_event('command', function(command, ntype)
 		{ '/objectives list', ' - Lists available profiles'},
 		{'/objectives loadprofile <profileName>', ' - Loads objectives from profile to add or remove objectives'},
 		{'/objectives clear', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'},
-		{'/objectives clearall', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'}
+		{'/objectives clearall', ' - Clears all currently loaded objectives (must zone or add/remove an objective to initilize list'},
+		{'/objectives copycat', ' - Enables Copycat mode. Manually getting / removing ROE on main character will use /ms sendTo to update other characters - Edit partylist at top of addon file'}
     });
     return true;
 
