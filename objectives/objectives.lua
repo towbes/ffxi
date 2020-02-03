@@ -25,12 +25,12 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'objectives';
-_addon.version  = '0.3.1';
+_addon.version  = '0.3.2';
 
 
 
 --Used for copycat mode to get/remove RoE from dual box characters with /ms send
-partylist = {'', '', '', ''}
+partylist = {'', '', ''}
 
 
 ---------------------------------
@@ -60,6 +60,11 @@ objectiveProfiles = { };
 -- Create a table for holding the current profile to be written
 --------------------------------------------------------------
 currentProfile = { };
+
+
+objectivesQueue = { };  -- Table to hold commands queued for sending
+objDelay          = 0.65; -- The delay to prevent spamming packets.
+objTimer          = 0;    -- The current time used for delaying packets.
 
 --try to load objectives file when addon is loaded
 ashita.register_event('load', function()
@@ -322,7 +327,7 @@ function get_current()
 	for i, objective in ipairs (currentProfile) do
 		i = i + 1;
 		objget = string.format("0x%X",objective);
-		ashita.timer.once(i, get_objective, objget);
+		get_objective(objget)
 	end
 end;
 
@@ -335,7 +340,7 @@ function remove_current()
 	for i, objective in ipairs (currentProfile) do
 		i = i + 1;
 		objrem = string.format("0x%X",objective);
-		ashita.timer.once(i, remove_objective, objremove);
+		remove_objective(objclear);
 	end
 end;
 
@@ -356,12 +361,12 @@ end;
 ---------------------------------------------------------------------------------------------------
 function clear_objectives()
 	print("Clearing all objectives without progress...");
-	i = 1
+	i = 1;
 	for k,v in pairs (_roe.active) do
 		if (v == 0) then
-			objclear = string.format("0x%X",k)
-			i = i + 1
-			ashita.timer.once(i, remove_objective, objclear);
+			objclear = string.format("0x%X",k);
+			i = i + 1;
+			remove_objective(objclear);
 		end
 	end
 end;
@@ -376,7 +381,7 @@ function clear_allobjectives()
 	for k,v in pairs (_roe.active) do
 		objclear = string.format("0x%X",k)
 		i = i + 1
-		ashita.timer.once(i, remove_objective, objclear);
+		remove_objective(objclear);
 	end
 end;
 
@@ -405,7 +410,9 @@ function get_objective(objectiveId)
 --	local unityranking = struct.pack('I2I2I4', 0x1517, 0x0000, 0x0000):totable();
 --	AddOutgoingPacket(0x10C, unityranking);
 	local getcommand = struct.pack('I2I2I4', 0x050C, 0x0000, fixedobj):totable();
-	AddOutgoingPacket(0x10C, getcommand);
+	
+	table.insert(objectivesQueue, { 0x10C, getcommand});
+
 end;
 
 ---------------------------------------------------------------------------------------------------
@@ -428,8 +435,37 @@ function remove_objective(objectiveId)
 	end
 	print("Removing RoE Objective " .. objectiveId)
 	local getcommand = struct.pack('I2I2I4', 0x050D, 0x0000, fixedobj):totable();
-	AddOutgoingPacket(0x10D, getcommand);
+	table.insert(objectivesQueue, { 0x10D, getcommand});
+
 end;
+
+----------------------------------------------------------------------------------------------------
+-- func: process_queue
+-- desc: Processes the packet queue to be sent.
+----------------------------------------------------------------------------------------------------
+function process_queue()
+    if  (os.time() >= (objTimer + objDelay)) then
+        objTimer = os.time();
+
+        -- Ensure the queue has something to process..
+        if (#objectivesQueue > 0) then
+            -- Obtain the first queue entry..
+            local data = table.remove(objectivesQueue, 1);
+
+            -- Send the queued object..
+            AddOutgoingPacket(data[1], data[2]);
+        end
+    end
+end
+
+----------------------------------------------------------------------------------------------------
+-- func: render
+-- desc: Event called when the addon is being rendered.
+----------------------------------------------------------------------------------------------------
+ashita.register_event('render', function()
+    -- Process the objectives packet queue..
+    process_queue();
+end);
 
 ----------------------------------------------------------------------------------------------------
 -- func: command
