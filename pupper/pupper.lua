@@ -42,6 +42,8 @@ currentManeuver = "";
 
 manDelay        = 15 -- The delay to prevent spamming maneuvers , 3 seconds
 manTimer        = 0;    -- The current time used for delaying packets.
+castDelay 		= 10;
+castTimer		= 0;
 maneuvers = {};
 manFlag = false;
 currMan = 1;
@@ -117,6 +119,7 @@ function do_maneuvers()
 		
 end;
 
+--[[
 function nextManeuver()
 	local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
 	for i,v in pairs(buffs) do
@@ -128,11 +131,21 @@ function nextManeuver()
 			end
 			print("Found last maneuvers buff, setting next maneuver: " .. maneuvers[currMan])
 			currentManeuver = maneuvers[currMan]
-
 		end
 	end
 end;
+--]]
+function nextManeuver()
 
+	currMan = currMan + 1
+	if currMan > 3 then
+		print("Currman greater than 3, resetting to 1")
+		currMan = 1
+	end
+	print("Setting next maneuver: " .. maneuvers[currMan])
+	currentManeuver = maneuvers[currMan]
+
+end;
 
 ----------------------------------------------------------------------------------------------------
 -- func: process_queue
@@ -149,8 +162,8 @@ function process_maneuver()
             -- Send the queued object..
 			print("Using " .. manString)
 			AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
-			currentManeuver = ""
 			nextManeuver()
+
         end
     end
 end
