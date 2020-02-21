@@ -147,9 +147,9 @@ function process_maneuver()
 
 	if  (os.time() >= (manTimer + manDelay)) then
 		manTimer = os.time();
-
+		local recastTimerManeuver   	= ashita.ffxi.recast.get_ability_recast_by_id(210);
 		-- Check if manflag is set, then try to activate maneuver
-		if (manFlag and not currBuffFlag) then
+		if (manFlag and not currBuffFlag and recastTimerManeuver == 0) then
 
 			-- Obtain the first queue entry..
 			manString = currentManeuver .. " Maneuver"
@@ -168,6 +168,8 @@ end;
 ----------------------------------------------------------------------------------------------------
 ashita.register_event('render', function()
 	--track if we have the buff of current maneuver, if we do, move to next manuever
+
+
 	currBuffFlag = false
 	local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
 	for i,v in pairs(buffs) do
