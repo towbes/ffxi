@@ -23,9 +23,9 @@
 * No warranties are given.
 ]]--
 
-_addon.author   = 'tornac';
-_addon.name     = 'pupatt';
-_addon.version  = '1.01';
+_addon.author   = 'towbes';
+_addon.name     = 'pupper';
+_addon.version  = '0.1';
 
 ---------------------------------
 --DO NOT EDIT BELOW THIS LINE
@@ -40,13 +40,16 @@ require 'logging'
 --------------------------------------------------------------
 currentManeuver = "";
 
-manDelay        = 15 -- The delay to prevent spamming maneuvers , 3 seconds
+manDelay        = 1 -- The delay to prevent spamming maneuvers , 3 seconds
 manTimer        = 0;    -- The current time used for delaying packets.
 castDelay 		= 10;
 castTimer		= 0;
 maneuvers = {};
 manFlag = false;
 currMan = 1;
+currBuffFlag = false;
+currManBuffs = {};
+
 
 currentAttachments = {}; -- table for holding current attachments
 pupattProfiles = { }; -- table for holding attachment profiles
@@ -111,6 +114,12 @@ function do_maneuvers()
 			print("Current Maneaver:" .. maneuvers[currMan])
 			print("Current buffid: " .. currManBuffs[currMan])
 			manFlag = true
+			if not currBuffFlag then
+				manString = currentManeuver .. " Maneuver"
+				-- Send the queued object..
+				print("Using " .. manString)
+				AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
+			end
 		else
 			print("no pet!")
 
@@ -119,30 +128,13 @@ function do_maneuvers()
 		
 end;
 
---[[
-function nextManeuver()
-	local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
-	for i,v in pairs(buffs) do
-		if tonumber(currManBuffs[currMan]) == buffs[i] then
-			currMan = currMan + 1
-			if currMan > 3 then
-				print("Currman greater than 3, resetting to 1")
-				currMan = 1
-			end
-			print("Found last maneuvers buff, setting next maneuver: " .. maneuvers[currMan])
-			currentManeuver = maneuvers[currMan]
-		end
-	end
-end;
---]]
-function nextManeuver()
 
+function nextManeuver()
+	currBuffFlag = false
 	currMan = currMan + 1
 	if currMan > 3 then
-		print("Currman greater than 3, resetting to 1")
 		currMan = 1
 	end
-	print("Setting next maneuver: " .. maneuvers[currMan])
 	currentManeuver = maneuvers[currMan]
 
 end;
@@ -152,21 +144,22 @@ end;
 -- desc: Processes the packet queue to be sent.
 ----------------------------------------------------------------------------------------------------
 function process_maneuver()
-    if  (os.time() >= (manTimer + manDelay)) then
-        manTimer = os.time();
 
-        -- Check if manflag is set, then try to activate maneuver
-        if (manFlag) then
-            -- Obtain the first queue entry..
+	if  (os.time() >= (manTimer + manDelay)) then
+		manTimer = os.time();
+
+		-- Check if manflag is set, then try to activate maneuver
+		if (manFlag and not currBuffFlag) then
+
+			-- Obtain the first queue entry..
 			manString = currentManeuver .. " Maneuver"
-            -- Send the queued object..
-			print("Using " .. manString)
+			-- Send the queued object..
 			AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
 			nextManeuver()
 
-        end
-    end
-end
+		end
+	end
+end;
 
 
 ----------------------------------------------------------------------------------------------------
@@ -174,11 +167,33 @@ end
 -- desc: Event called when the addon is being rendered.
 ----------------------------------------------------------------------------------------------------
 ashita.register_event('render', function()
-    -- Process the objectives packet queue..
+	--track if we have the buff of current maneuver, if we do, move to next manuever
+	currBuffFlag = false
+	local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
+	for i,v in pairs(buffs) do
+		if tonumber(currManBuffs[currMan]) == buffs[i] then
+			nextManeuver()
+			currBuffFlag = true
+		end
+	end
+
+	-- Process the objectives packet queue..
     process_maneuver();
 end);
 
+----------------------------------------------------------------------------------------------------
+-- func: print_help
+-- desc: Displays a help block for proper command usage.
+----------------------------------------------------------------------------------------------------
+local function print_help(cmd, help)
+    -- Print the invalid format header..
+    print('\31\200[\31\05' .. _addon.name .. '\31\200]\30\01 ' .. '\30\68Invalid format for command:\30\02 ' .. cmd .. '\30\01'); 
 
+    -- Loop and print the help commands..
+    for k, v in pairs(help) do
+        print('\31\200[\31\05' .. _addon.name .. '\31\200]\30\01 ' .. '\30\68Syntax:\30\02 ' .. v[1] .. '\30\71 ' .. v[2]);
+    end
+end
 
 
 ashita.register_event('command', function(command, ntype)
@@ -213,5 +228,12 @@ ashita.register_event('command', function(command, ntype)
 		print("Maneuvers stopped!")
   		return true;
   	end
+    -- Prints the addon help..
+    print_help('/pupper', {
+		{'/pupper set maneuver maneuver maneuver', ' - sets maneuver rotation (fire, ice, light, wind, earth, thunder, dark'},
+		{'/pupper go', ' - starts rotation'}
+		
+    });
+    return true;
 	
 end);
