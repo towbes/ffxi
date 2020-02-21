@@ -87,11 +87,9 @@ function set_maneuvers(man1, man2, man3)
 		end
 	
 		if (flag1 and flag2 and flag3) then
-			maneuvers = {man1, man2, man3}
-			print(maneuvers[1]);			
+			maneuvers = {man1, man2, man3}		
 			currManBuffs = {manbuff1, manbuff2, manbuff3}
 			printbuffs = ashita.settings.JSON:encode_pretty(currManBuffs, nil, {pretty = true, indent = "->    " });
-			print(printbuffs);		
 		else
 			print("Element not found")
 		end
