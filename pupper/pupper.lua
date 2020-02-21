@@ -25,7 +25,7 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'pupper';
-_addon.version  = '0.1';
+_addon.version  = '0.2';
 
 ---------------------------------
 --DO NOT EDIT BELOW THIS LINE
@@ -49,7 +49,10 @@ manFlag = false;
 currMan = 1;
 currBuffFlag = false;
 currManBuffs = {};
-
+isMount = false;
+buff1total = 1
+buff2total = 1
+buff3total = 1
 
 currentAttachments = {}; -- table for holding current attachments
 pupattProfiles = { }; -- table for holding attachment profiles
@@ -70,6 +73,25 @@ function set_maneuvers(man1, man2, man3)
 		local flag1 = false
 		local flag2 = false
 		local flag3 = false
+
+		if man1 == man2 and man1 == man3 then
+			buff1total = 3
+			buff2total = 0
+			buff3total = 0
+		elseif man2 == man3 then
+			buff1total = 1
+			buff2total = 2
+			buff3total = 0
+		elseif man1 == man2 then
+			buff1total = 2
+			buff2total = 0
+			buff3total = 1
+		elseif man1 == man3 then
+			buff1total = 2
+			buff2total = 1
+			buff3total = 0
+		end
+		
 
 		for _,buff in pairs(manBuffs) do
 			if buff.name == string.lower(man1) then
@@ -107,17 +129,8 @@ function do_maneuvers()
 		local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
 		--print(MainJob, SubJob, buffs[0], limitpoints, zone_id)
 		currMan = 1
-		if pet ~= nil then
-			currentManeuver = maneuvers[currMan]
-			print("Current Maneaver:" .. maneuvers[currMan])
-			print("Current buffid: " .. currManBuffs[currMan])
+		if pet ~= nil and (MainJob == 18 or SubJob == 18) then
 			manFlag = true
-			if not currBuffFlag then
-				manString = currentManeuver .. " Maneuver"
-				-- Send the queued object..
-				print("Using " .. manString)
-				AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
-			end
 		else
 			print("no pet!")
 
@@ -126,16 +139,6 @@ function do_maneuvers()
 		
 end;
 
-
-function nextManeuver()
-	currBuffFlag = false
-	currMan = currMan + 1
-	if currMan > 3 then
-		currMan = 1
-	end
-	currentManeuver = maneuvers[currMan]
-
-end;
 
 ----------------------------------------------------------------------------------------------------
 -- func: process_queue
@@ -147,14 +150,20 @@ function process_maneuver()
 		manTimer = os.time();
 		local recastTimerManeuver   	= ashita.ffxi.recast.get_ability_recast_by_id(210);
 		-- Check if manflag is set, then try to activate maneuver
-		if (manFlag and not currBuffFlag and recastTimerManeuver == 0) then
+		local player					= GetPlayerEntity();
+		local pet 						= GetEntity(player.PetTargetIndex);
 
-			-- Obtain the first queue entry..
-			manString = currentManeuver .. " Maneuver"
-			-- Send the queued object..
-			AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
-			nextManeuver()
-
+		if (manFlag and not currBuffFlag and recastTimerManeuver == 0 and pet ~=nil and not isMounted) then
+			if (buff1total > buff1count) then
+				manString = maneuvers[1] .. " Maneuver"
+				AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
+			elseif (buff2total > buff2count) then
+				manString = maneuvers[2] .. " Maneuver"
+				AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
+			elseif (buff3total > buff3count) then	
+				manString = maneuvers[3] .. " Maneuver"
+				AshitaCore:GetChatManager():QueueCommand('/ja "' .. manString .. '" <me>', 1)
+			end
 		end
 	end
 end;
@@ -166,17 +175,28 @@ end;
 ----------------------------------------------------------------------------------------------------
 ashita.register_event('render', function()
 	--track if we have the buff of current maneuver, if we do, move to next manuever
-
-
+	isMounted = false
+	buff1count = 0
+	buff2count = 0
+	buff3count = 0
 	currBuffFlag = false
 	local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
 	for i,v in pairs(buffs) do
-		if tonumber(currManBuffs[currMan]) == buffs[i] then
-			nextManeuver()
-			currBuffFlag = true
+		--we're mounted
+		if buffs[i] == 252 then
+			isMounted = true
 		end
-	end
+		if tonumber(currManBuffs[1]) == buffs[i] then
+			buff1count = buff1count + 1
+		end
+		if tonumber(currManBuffs[2]) == buffs[i] then
+			buff2count = buff2count + 1
+		end
+		if tonumber(currManBuffs[3]) == buffs[i] and buff3total == 1 then
+			buff3count = buff3count + 1
+		end
 
+	end
 	-- Process the objectives packet queue..
     process_maneuver();
 end);
