@@ -130,6 +130,11 @@ function do_maneuvers()
 		local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
 		--print(MainJob, SubJob, buffs[0], limitpoints, zone_id)
 		currMan = 1
+		
+		if maneuvers[1] == nil then
+			print("No maneuvers set")
+			return
+		end
 		if pet ~= nil and (MainJob == 18 or SubJob == 18) then
 			manFlag = true
 		else
