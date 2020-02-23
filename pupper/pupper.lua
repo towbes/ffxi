@@ -182,14 +182,14 @@ end;
 
 
 function do_repair()
-	local recastTimerRepair   	= ashita.ffxi.recast.get_ability_recast_by_id(137);
+	local recastTimerRepair   	= ashita.ffxi.recast.get_ability_recast_by_id(206);
 	if recastTimerRepair == 0 then
 		AshitaCore:GetChatManager():QueueCommand('/ja Repair <me>', 1)
 	end
 end
 
 function do_cooldown()
-	local recastTimerCooldown   	= ashita.ffxi.recast.get_ability_recast_by_id(309);
+	local recastTimerCooldown   	= ashita.ffxi.recast.get_ability_recast_by_id(114);
 	if recastTimerCooldown == 0 then
 		AshitaCore:GetChatManager():QueueCommand('/ja Cooldown <me>', 1)
 	end
@@ -279,7 +279,6 @@ ashita.register_event('command', function(command, ntype)
     if (args[1] ~= '/pupper') then
         return false;
     end
-
 
     if (#args >= 2 and args[2] == 'set') then
   		set_maneuvers(args[3],args[4],args[5])
