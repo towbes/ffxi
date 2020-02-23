@@ -150,9 +150,21 @@ function process_maneuver()
 		manTimer = os.time();
 		local recastTimerManeuver   	= ashita.ffxi.recast.get_ability_recast_by_id(210);
 		-- Check if manflag is set, then try to activate maneuver
-		local player					= GetPlayerEntity();
-		local pet 						= GetEntity(player.PetTargetIndex);
-
+		local player = GetPlayerEntity();
+		if (player == nil) then
+			return;
+		end
+		
+		-- Obtain the players pet index..
+		if (player.PetTargetIndex == 0) then
+			return;
+		end
+		
+		-- Obtain the players pet..
+		local pet = GetEntity(player.PetTargetIndex);
+		if (pet == nil) then
+			return;
+		end
 		if (manFlag and not currBuffFlag and recastTimerManeuver == 0 and pet ~=nil and not isMounted) then
 			if (buff1total > buff1count) then
 				manString = maneuvers[1] .. " Maneuver"
@@ -169,6 +181,19 @@ function process_maneuver()
 end;
 
 
+function do_repair()
+	local recastTimerRepair   	= ashita.ffxi.recast.get_ability_recast_by_id(137);
+	if recastTimerRepair == 0 then
+		AshitaCore:GetChatManager():QueueCommand('/ja Repair <me>', 1)
+	end
+end
+
+function do_cooldown()
+	local recastTimerCooldown   	= ashita.ffxi.recast.get_ability_recast_by_id(309);
+	if recastTimerCooldown == 0 then
+		AshitaCore:GetChatManager():QueueCommand('/ja Cooldown <me>', 1)
+	end
+end
 ----------------------------------------------------------------------------------------------------
 -- func: render
 -- desc: Event called when the addon is being rendered.
@@ -180,11 +205,42 @@ ashita.register_event('render', function()
 	buff2count = 0
 	buff3count = 0
 	currBuffFlag = false
+	
+	local player = GetPlayerEntity();
+	if (player == nil) then
+		manFlag = false
+		return;
+	end
+	
+	-- Obtain the players pet index..
+	if (player.PetTargetIndex == 0) then
+		return;
+	end
+	
+	-- Obtain the players pet..
+	local pet = GetEntity(player.PetTargetIndex);
+	if (pet == nil) then
+		manFlag = false
+		return;
+	end
+	
+	--Check pet hp, if pet hp is below 35% use repair	
+	if pet.HealthPercent < 35 then
+		do_repair()
+	end
+	
+
+	
+	
 	local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
 	for i,v in pairs(buffs) do
 		--we're mounted
 		if buffs[i] == 252 then
 			isMounted = true
+		end
+		--overloaded!
+		if buffs[i] == 299 then
+			do_cooldown()
 		end
 		if tonumber(currManBuffs[1]) == buffs[i] then
 			buff1count = buff1count + 1
@@ -250,7 +306,7 @@ ashita.register_event('command', function(command, ntype)
   	end
     -- Prints the addon help..
     print_help('/pupper', {
-		{'/pupper set maneuver maneuver maneuver', ' - sets maneuver rotation (fire, ice, light, wind, earth, thunder, dark'},
+		{'/pupper set maneuver maneuver maneuver', ' - sets maneuver rotation (water, fire, ice, light, wind, earth, thunder, dark'},
 		{'/pupper go', ' - starts rotation'}
 		
     });
