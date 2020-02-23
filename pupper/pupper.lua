@@ -25,7 +25,7 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'pupper';
-_addon.version  = '0.3';
+_addon.version  = '0.2';
 
 ---------------------------------
 --DO NOT EDIT BELOW THIS LINE
@@ -130,13 +130,15 @@ function do_maneuvers()
 		local buffs						= AshitaCore:GetDataManager():GetPlayer():GetBuffs();
 		--print(MainJob, SubJob, buffs[0], limitpoints, zone_id)
 		currMan = 1
-		
+
 		if maneuvers[1] == nil then
 			print("No maneuvers set")
 			return
 		end
+
 		if pet ~= nil and (MainJob == 18 or SubJob == 18) then
 			manFlag = true
+			print("Maneuvers going!")
 		else
 			print("no pet!")
 
@@ -191,7 +193,7 @@ function do_repair()
 	local recastTimerRepair   	= ashita.ffxi.recast.get_ability_recast_by_id(206);
 	local inventory = AshitaCore:GetDataManager():GetInventory();
 	local ammo = inventory:GetEquippedItem(3);
-	if recastTimerRepair == 0 and ammo ~= 0 then
+	if recastTimerRepair == 0 and ammo.ItemIndex > 0 then
 		AshitaCore:GetChatManager():QueueCommand('/ja Repair <me>', 1)
 	end
 end
@@ -294,12 +296,6 @@ ashita.register_event('command', function(command, ntype)
   		return true;
   	end
 	
-	if (#args >= 2 and args[2] == 'test') then
-		local inventory = AshitaCore:GetDataManager():GetInventory();
-		local equipment = inventory:GetEquippedItem(3);
-		print("ammo: " .. equipment.ItemIndex);
-		return true
-	end
 	
     if (#args >= 2 and args[2] == 'delay') then
 		print("Delay set to " .. args[3])
@@ -309,7 +305,6 @@ ashita.register_event('command', function(command, ntype)
 	
     if (#args >= 2 and args[2] == 'go') then
   		do_maneuvers()
-		print("Maneuvers going!")
   		return true;
   	end
 	
