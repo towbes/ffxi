@@ -16,6 +16,6 @@ ie
 
 2.0.0.3 updated to fix /buyall
 
-/buyall "item"
+/sparks buyall "item"
 
 will buy till your inventory fills or you run out of sparks (does not currently put items away)
