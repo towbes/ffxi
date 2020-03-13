@@ -1,2 +1,2 @@
 # ffxi
- FFXI Addons / Scripts
+ FFXI Ashita Addons / Scripts 
