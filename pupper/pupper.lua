@@ -25,7 +25,7 @@
 
 _addon.author   = 'towbes';
 _addon.name     = 'pupper';
-_addon.version  = '0.2';
+_addon.version  = '0.3';
 
 ---------------------------------
 --DO NOT EDIT BELOW THIS LINE
@@ -54,6 +54,8 @@ buff1total = 1
 buff2total = 1
 buff3total = 1
 isOverloaded = false
+zoning_bool = false
+DebugMode = false
 
 currentAttachments = {}; -- table for holding current attachments
 pupattProfiles = { }; -- table for holding attachment profiles
@@ -193,7 +195,9 @@ function do_repair()
 	local recastTimerRepair   	= ashita.ffxi.recast.get_ability_recast_by_id(206);
 	local inventory = AshitaCore:GetDataManager():GetInventory();
 	local ammo = inventory:GetEquippedItem(3);
-	if recastTimerRepair == 0 and ammo.ItemIndex > 0 then
+	if ammo.ItemIndex == 0 then
+		return
+	elseif recastTimerRepair == 0 and ammo.ItemIndex > 0 then
 		AshitaCore:GetChatManager():QueueCommand('/ja Repair <me>', 1)
 	end
 end
@@ -222,6 +226,10 @@ ashita.register_event('render', function()
 		return;
 	end
 	
+	if zoning_bool then
+		return
+	end
+	
 	-- Obtain the players pet index..
 	if (player.PetTargetIndex == 0) then
 		return;
@@ -234,8 +242,9 @@ ashita.register_event('render', function()
 		return;
 	end
 	
-	--Check pet hp, if pet hp is below 35% use repair	
-	if pet.HealthPercent < 35 then
+	petDistance = math.sqrt(pet.Distance)
+	--Check pet hp, if pet hp is below 35% use repair and if pet is within 20yalms
+	if pet.HealthPercent < 35 and petDistance < 20 then
 		do_repair()
 	end
 	
@@ -268,6 +277,26 @@ ashita.register_event('render', function()
     process_maneuver();
 end);
 
+ashita.register_event(
+    "incoming_packet",
+    function(id, size, data)
+		if (id == 0xB) then
+			DebugMessage("Currently zoning.")
+			zoning_bool = true
+		elseif (id == 0xA and zoning_bool) then
+			DebugMessage("No longer zoning.")
+			zoning_bool = false
+		end
+        return false
+    end
+)
+
+function DebugMessage(message)
+    if DebugMode then
+        print("\31\200[\31\05Pupper\31\200]\31\207 " .. message)
+    end
+end
+
 ----------------------------------------------------------------------------------------------------
 -- func: print_help
 -- desc: Displays a help block for proper command usage.
@@ -296,6 +325,12 @@ ashita.register_event('command', function(command, ntype)
   		return true;
   	end
 	
+	if (#args >= 2 and args[2] == 'test') then
+		local inventory = AshitaCore:GetDataManager():GetInventory();
+		local equipment = inventory:GetEquippedItem(3);
+		print("ammo: " .. equipment.ItemIndex);
+		return true
+	end
 	
     if (#args >= 2 and args[2] == 'delay') then
 		print("Delay set to " .. args[3])
@@ -309,7 +344,6 @@ ashita.register_event('command', function(command, ntype)
   	end
 	
     if (#args >= 2 and args[2] == 'stop') then
-  		do_maneuvers()
 		manFlag = false
 		print("Maneuvers stopped!")
   		return true;
