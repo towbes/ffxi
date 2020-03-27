@@ -4,7 +4,7 @@ Buys KI for High Tier Mission Battlefields, use the [#] index number of desire K
 - Commands
 /htmb buy #', ' Buy index number of desired item on htmb_map *0-23 (Look in LUA file)
 
-htmb_map = {
+*** Valid KI (as of 3/27/2020)
      [0] = {name = 'Shadow Lord phantom gem',      cost = 10},
      [1] = {name = 'Stellar Fulcrum phantom gem',  cost = 10},
      [2] = {name = 'Celestial Nexus phantom gem',  cost = 10},
@@ -31,12 +31,11 @@ htmb_map = {
     [22] = {name = 'Divine phantom gem',           cost = 10},
     [23] = {name = 'Maiden phantom gem',           cost = 10},
 
-valid_zones = {
 
+*** Current Zones
 	[231] = {npc="Trisvain", menu=892}, -- Northern San d'Oria
 
 	[236] = {npc="Raving Opossum", menu=429}, -- Port Bastok
 
 	[240] = {npc="Mimble-Pimble", menu=895}, -- Port Windurst
 
-}
