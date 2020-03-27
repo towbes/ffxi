@@ -140,7 +140,6 @@ ashita.register_event('incoming_packet', function(id, size, packet)
 	if (id == 0x034) and busy and pkt then
 		menu_options = struct.unpack('I4', packet, 0x0C + 1)
 		merit_points = struct.unpack('b', packet, 0x10 + 1)
-		print(string.format("Menu options: 0x%X", menu_options))
 		insideMenu = true
 		pkt['Option Index'] = get_option_index(pkt['MapId'])
 		if pkt['Option Index'] then
@@ -152,7 +151,7 @@ ashita.register_event('incoming_packet', function(id, size, packet)
 			local buyPacket = struct.pack('I2I2I4bbI2I2bbI2I2', 0x0A5B, 0x0000, pkt['Target'], 0x02, pkt['Option Index'], 0x0000, pkt['Target Index'], 0x00, 0x00, pkt['Zone'], pkt['Menu ID']):totable();
 			table.insert(buyQueue, { 0x05B, buyPacket});
 		else
-			print("\30\68[HTMB]Something went wrong, closing menu");
+			print("\30\68[HTMB]Not enough merits or already have KI");
 			local closePacket = struct.pack('I2I2I4I2I2I2bbI2I2', 0x0A5B, 0x0000, pkt['Target'], 0x0000, 0x0000, pkt['Target Index'], 0x00, 0x00, pkt['Zone'], pkt['Menu ID']):totable();
 			table.insert(buyQueue, { 0x05B, closePacket});
 		end
@@ -187,7 +186,6 @@ function process_queue()
             -- Obtain the first queue entry..
             local data = table.remove(buyQueue, 1);
             -- Send the queued object..
-			print("Sending packet #"..(#buyQueue + 1))
             AddOutgoingPacket(data[1], data[2]);
 --		elseif busy and (#buyQueue < 1) then
 --			DebugMessage("Done buying, closing menu")
