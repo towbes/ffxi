@@ -26,7 +26,7 @@
 
 _addon.name = 'Ashita Roller'
 _addon.version = '0.1'
-_addon.author = 'Selindrile, thanks to: Balloon and Lorand - Ashita port by towbes - Big thanks to Matix for action parsing code'
+_addon.author = 'Selindrile, thanks to: Balloon and Lorand - Ashita port by towbes - Big thanks to matix for action parsing code'
 
 require 'common'
 require 'buffsmap'
@@ -64,7 +64,7 @@ haveRoll2 = false
 haveBust = false
 canDouble = false
 
-DebugMode = true
+DebugMode = false
 
 function DebugMessage(message)
   if DebugMode then
@@ -305,11 +305,15 @@ ashita.register_event('command', function(command, ntype)
 			config.save(settings)
 			
 		elseif cmd[1]:startswith('exp') or cmd[1]:startswith('cap') or cmd[1] == "cp" then
-			settings.Roll_ind_1 = 17
-			settings.Roll_ind_2 = 19
-			RollerMessage('Setting Roll 1 to: '..roll1..'')
-			RollerMessage('Setting Roll 2 to: '..roll2..'')
-			config.save(settings)
+			roll1 = 304
+			roll2 = 114
+			roll1buff = rollInfo[roll1].buffid
+			roll2buff = rollInfo[roll2].buffid
+			roll1name = rollInfo[roll1].name
+			roll2name = rollInfo[roll2].name
+			RollerMessage('Setting Roll 1 to: '..rollInfo[roll1].name)
+			RollerMessage('Setting Roll 2 to: '..rollInfo[roll2].name)
+--			config.save(settings)
 			
 		elseif cmd[1] == "tp" or cmd[1] == "stp" then
 			settings.Roll_ind_1 = 12
