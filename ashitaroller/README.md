@@ -11,6 +11,7 @@ Ashita port of Selindrile's roller addon for windower: https://github.com/Selind
 - Stop/Off/Quit/End/Disable/Disengage - Stop rolling  
 - roll1 <roll> (can use beginning of roll name ie: cor = corsair's, or stat)
 - roll2 <roll>
+- engaged on/off - Enable or disable only rolling while engaged
 
 ## Presets (/roll preset)  
 - TP   
@@ -22,4 +23,5 @@ Ashita port of Selindrile's roller addon for windower: https://github.com/Selind
 
 
 ### To Do
-- Implement engaged only mode
+- probably bug fixes
+- per character settings?

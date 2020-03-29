@@ -222,9 +222,13 @@ function rollsFixedOverlay()
 	imgui.Text('Roll1: ' .. rollInfo[settings.Roll1].name);
 	imgui.Text('Roll2: ' .. rollInfo[settings.Roll2].name);
 	imgui.Text('Autoroll: ' .. tostring(autoroll));
+	if (settings.engaged) then
+		imgui.Text("Engaged only mode on")
+	end
 	if (stealthy) then
 		imgui.Text("Invis/Sneak - No rolling");
 	end
+
     imgui.End();
 end
 
@@ -265,7 +269,8 @@ ashita.register_event('command', function(command, ntype)
 				{'/roller', ' - Shows current rolls'},
 				{'roll' ,'To start or stop auto rolling type '},
 				{'roll# rollname', 'Set roll to a roll from mapping table(can use beginning of roll name ie: cor = corsair, or stat)'},
-				{'preset' , 'Set preset rolls (TP, Acc, WS, Nuke, Pet, PetNuke)'}				
+				{'preset' , 'Set preset rolls (TP, Acc, WS, Nuke, Pet, PetNuke)'},
+				{'engaged' , 'on/off to enable or disable only rolling while engaged'}					
 			});
 		elseif cmd[1] == "debug" then
 			if DebugMode == false then
@@ -715,14 +720,15 @@ function doRoll()
 		if stealthy then return end
 		
 		local playerid = AshitaCore:GetDataManager():GetParty():GetMemberServerId(0)
+		local player = GetPlayerEntity()
 		local mainjob = AshitaCore:GetDataManager():GetPlayer():GetMainJob();
 		local mainjob_level = AshitaCore:GetDataManager():GetPlayer():GetMainJobLevel();
 		local subjob = AshitaCore:GetDataManager():GetPlayer():GetSubJob();
 		if not (mainjob == 17 or subjob == 17) then return end
 
-	--	local status = res.statuses[windower.ffxi.get_player().status].english
+		local status = player.Status
 		
-	--	if not (((status == 'Idle') and not settings.engaged) or status == 'Engaged') then return end
+		if not (((status == 0) and not settings.engaged) or status == 1) then return end
 
 		
 		local snakeRecast = ashita.ffxi.recast.get_ability_recast_by_id(197);--JAid 177 , RecastId 197
