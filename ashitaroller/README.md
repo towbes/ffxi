@@ -1,7 +1,7 @@
-# AhitaRoller
+# AshitaRoller
 Ashita port of Selindrile's roller addon for windower: https://github.com/Selindrile/Roller  
 
-## Features  
+### Features  
 - Automatic corsair rolling
 - Crooked cards / Fold JAs
 - Stops on zones
