@@ -25,7 +25,7 @@
 --SOFTWARE, EVEN IFIF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 _addon.name = 'Ashita Roller'
-_addon.version = '0.1'
+_addon.version = '0.2'
 _addon.author = 'Selindrile, thanks to: Balloon and Lorand - Ashita port by towbes - Big thanks to matix for action parsing code'
 
 require 'common'
@@ -52,7 +52,7 @@ zoning_bool = false
 lastRoll = 0
 lastRollCrooked = false
 midRoll = false
-
+rollerTimeout = 0 -- Used to timeout if we haven't rolled in a while, will set midRoll to false
 
 haveRoll1 = false
 haveRoll2 = false
@@ -280,6 +280,16 @@ ashita.register_event('command', function(command, ntype)
 				RollerMessage("Debug mode disabled")
 				DebugMode = false
 			end
+		elseif cmd[1] == "flags" then
+
+			DebugMessage("zoningbool " .. tostring(zoning_bool))
+			DebugMessage("lastroll " .. tostring(lastRoll))
+			DebugMessage("lastrollcrooked " .. tostring(lastRollCrooked))
+			DebugMessage("midroll " ..tostring(midRoll))
+			DebugMessage("haveroll1 " .. tostring(haveRoll1))
+			DebugMessage("haveroll2 " .. tostring(haveRoll2))
+			DebugMessage("havebust " .. tostring(haveBust))
+			DebugMessage("candouble " .. tostring(canDouble))		
 		elseif cmd[1] == "display" then
 			if cmd[2] == nil then
 				settings.showdisplay = not settings.showdisplay
@@ -521,23 +531,7 @@ ashita.register_event('command', function(command, ntype)
 
 end);
 
---[[
-ashita.register_event('outgoing_packet', function(id, size, packet, packet_modified, blocked)
-	local rollActor
-	local rollID
-	local playerid = AshitaCore:GetDataManager():GetParty():GetMemberServerId(0)
-	local mainjob = AshitaCore:GetDataManager():GetPlayer():GetMainJob();
-	
-	category = struct.unpack('I2', packet, 0x0A + 1)
-	
-	if id==0x01A and category == 9 then
-		rollActor = struct.unpack('I4', packet, 0x04 + 1)
-		rollID = struct.unpack('I2', packet, 0x0C + 1)
-		if rollID == 177 then return end --Snake Eye
-	end
-    return false;
-end);
---]]
+
 ashita.register_event('incoming_packet', function(id, size, packet, packet_modified, blocked)
 
 	if (id == 0xB) then
@@ -567,6 +561,7 @@ ashita.register_event('incoming_packet', function(id, size, packet, packet_modif
 			local subjob = AshitaCore:GetDataManager():GetPlayer():GetSubJob();
 
 			if act.actor_id == playerid then
+				rollerTimeout = 0 -- We rolled so set the timeout to 0
 				--If roll is lucky or 11 returns.
 				if act.targets[1].actions[1].message ~= 424 then
 					lastRollCrooked = false
@@ -706,7 +701,10 @@ function doRoll()
 
 	if  (os.time() >= (rollTimer + rollDelay)) then
 		rollTimer = os.time();
-		
+		rollerTimeout = rollerTimeout + 1
+		if rollerTimeout > 10 then
+			midRoll = false
+		end
 		--if Cities:contains(res.zones[windower.ffxi.get_info().zone].english) then return end
 		if not autoroll or midRoll or haveBuff('amnesia') or haveBuff('impairment') then 
 			return
@@ -822,110 +820,6 @@ ashita.register_event('render', function()
 	doRoll()
 end);
 
-
---[[
-windower.register_event('job change', function()
-	zonedelay = 0
-	autoroll = false
-	lastRoll = 0
-	lastRollCrooked = false
-	update_displaybox()
-end)
-
-function create_display(settings)
-    if displayBox then displayBox:destroy() end
-
-    local windowersettings = windower.get_windower_settings()
-	local x,y
-	
-	if settings.displayx and settings.displayy then
-		x = settings.displayx
-		y = settings.displayy
-	elseif windowersettings["ui_x_res"] == 1920 and windowersettings["ui_y_res"] == 1080 then
-		x,y = windowersettings["ui_x_res"]-505, windowersettings["ui_y_res"]-18 -- -285, -18
-	else
-		x,y = 0, windowersettings["ui_y_res"]-17 -- -285, -18
-	end
-	
-    displayBox = texts.new()
-    displayBox:pos(x,y)
-    displayBox:font('Arial')--Arial
-    displayBox:size(12)
-    displayBox:bold(true)
-    displayBox:bg_alpha(0)--128
-    displayBox:right_justified(false)
-    displayBox:stroke_width(2)
-    displayBox:stroke_transparency(192)
-
-    update_displaybox(displayBox)
-end
-
-function update_displaybox()
-	local player = windower.ffxi.get_player()
-	if not player then return end
-	if not settings.showdisplay or not (mainjob == 17 or subjob == 17) then
-		if displayBox then displayBox:hide() end
-		return		
-	end
-	
-    -- Define colors for text in the display
-    local clr = {
-        h='\\cs(255,192,0)', -- Yellow for active booleans and non-default modals
-		w='\\cs(255,255,255)', -- White for labels and default modals
-        n='\\cs(192,192,192)', -- White for labels and default modals
-        s='\\cs(96,96,96)' -- Gray for inactive booleans
-    }
-
-    local info = {}
-    local orig = {}
-    local spc = '   '
-
-    -- Define labels for each modal state
-    local labels = {
-
-    }
-
-    displayBox:clear()
-	--displayBox:append(spc)
-
- 	displayBox:append("Roll 1: "..roll1.."   ")
-	if windower.ffxi.get_player().main_job == 17 and settings.Roll1 ~= settings.Roll2 then
-		displayBox:append("Roll 2: "..roll2.."   ")
-	end
-	displayBox:append("Autoroll: ")
-	if autoroll == true then
-		if haveBuff('Invisible') then
-			displayBox:append("Suspended: Invisible")
-		elseif haveBuff('Sneak') then
-			displayBox:append("Suspended: Sneak")
-		else
-			displayBox:append("On")
-		end
-	else
-		displayBox:append("Off")
-	end
-
-	if settings.engaged then
-		displayBox:append("  Engaged")
-	end
-    -- Update and display current info
-    displayBox:update(info)
-    displayBox:show()
-
-end
-
-windower.register_event('outgoing chunk', function(id, data)
-    if id == 0x00D and displayBox then
-        displayBox:hide()
-    end
-end)
-
-windower.register_event('incoming chunk', function(id, data)
-    if id == 0x00A and displayBox then
-        displayBox:show()
-    end
-end)
---]]
 function parse_rolls(packet_data)--returns roll_name, roll_value(when a roll is rolled or double-upped)
 	local r_name;
 	local r_value;
