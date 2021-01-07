@@ -1,6 +1,6 @@
 # AutoFollow
 
-Automove is a library written by Shinzaru that has all the memory components needed for overwriting x,y coordinates in memory.  This is not meant to be used on it's own.  The functions can be used inside of another addon (AutoMove)
+Automove is a library written by https://github.com/Shinzaku/FFXI-Ashita-Addons that has all the memory components needed for overwriting x,y coordinates in memory.  This is not meant to be used on it's own.  The functions can be used inside of another addon (AutoMove)
 
 
 # Automove
