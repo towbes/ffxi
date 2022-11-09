@@ -26,7 +26,7 @@
 --SOFTWARE, EVEN IFIF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 _addon.name = 'Ashita Roller'
-_addon.version = '0.3'
+_addon.version = '0.3.1'
 _addon.author = 'Selindrile, thanks to: Balloon and Lorand - Ashita port by towbes, matix - v0.3 changes by Lumlum'
 
 require 'common'
@@ -737,9 +737,6 @@ ashita.register_event('incoming_packet', function(id, size, packet, packet_modif
               elseif foldRecast == 0 and (not rollCrooked or settings.gamble) then
                 DebugMessage("Trying our luck because roll is not crooked and we have fold up, will ignore crooked if gamble mode is on")
                 nextAction = "doubleup"
-              elseif lastRoll == 11 and not rollCrooked then
-                DebugMessage("Immune to bust;Trying to get an 11 if roll isn't crooked")
-                nextAction = "doubleup"
               elseif rollNum < 6 then
                 DebugMessage("Rolling because roll is smaller than 6")
                 nextAction = "doubleup"
@@ -753,11 +750,20 @@ ashita.register_event('incoming_packet', function(id, size, packet, packet_modif
                 lastRoll = rollNum
               end
             end
+          elseif subjob==17 then
+            if rollNum < 6 then
+              DebugMessage("Rolling because roll is smaller than 6")
+              nextAction = "doubleup"
+            else
+              DebugMessage("Finished this roll")
+              nextAction = "idle"
+              RollerMessage(rollname .. " final roll: " .. rollNum)
+              lastRoll = rollNum
+            end
           end
         end
       end
     end
-
     return false;
   end);
 
@@ -810,7 +816,7 @@ function doRoll()
       return
     end
     --No need to do something if we already got both rolls
-    if haveRoll1 and haveRoll2 and nextAction=="idle" then
+    if haveRoll1 and (haveRoll2 or subjob==17) and nextAction=="idle" then
       if once then
         DebugMessage("Rolled once, rolls are up")
       end
@@ -873,7 +879,7 @@ function doRoll()
         nextRoll = settings.Roll1
         nextAction = "rolling"
       end
-    elseif not haveRoll2 and not haveBust and phantomRecast == 0 then
+    elseif mainjob == 17 and not haveRoll2 and not haveBust and phantomRecast == 0 then
       DebugMessage("We don't have roll 2 buff, trying roll2")
       roll2RollTime = os.time();
       if settings.partyalert then
